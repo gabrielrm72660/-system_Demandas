@@ -36,13 +36,16 @@ const App: React.FC = () => {
   const [selectedDemandaFin, setSelectedDemandaFin] = useState<Demanda | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('sgf_demandas', JSON.stringify(demandas));
-    localStorage.setItem('sgf_empresas', JSON.stringify(empresas));
-    localStorage.setItem('sgf_catalogo', JSON.stringify(catalogo));
-    localStorage.setItem('sgf_theme', darkMode ? 'dark' : 'light');
-    if (darkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [demandas, empresas, catalogo, darkMode]);
+  localStorage.setItem('sgf_theme', darkMode ? 'dark' : 'light');
+  
+  if (darkMode) {
+    document.documentElement.classList.add('dark');
+    document.documentElement.style.colorScheme = 'dark'; // Ajuda o navegador com cores padrão
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
+  }
+}, [darkMode]);
 
   const saveDemanda = (d: Demanda) => {
     setDemandas(prev => {
@@ -60,7 +63,7 @@ const App: React.FC = () => {
   if (!user) return <Auth onLogin={(u) => { setUser(u); localStorage.setItem('sgf_user', JSON.stringify(u)); }} />;
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 dark:text-slate-100 transition-colors">
+    <div className="flex min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <Sidebar currentView={currentView} setView={setCurrentView} user={user} onLogout={() => setUser(null)} darkMode={darkMode} toggleTheme={() => setDarkMode(!darkMode)} />
       <main className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
