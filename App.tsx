@@ -23,6 +23,12 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('sgf_empresas');
     return saved ? JSON.parse(saved) : [{ id: '1', nome: 'ProClima' }];
   });
+  
+  const initialProducts = [
+  { id: 'item-9', name: 'ITEM 9', price: 0, category: 'Serviços' },
+  { id: 'item-10', name: 'ITEM 10', price: 0, category: 'Serviços' },
+  { id: 'item-11', name: 'ITEM 11', price: 0, category: 'Serviços' }
+];
 
   const [catalogo, setCatalogo] = useState<ItemCatalogo[]>(() => {
     const saved = localStorage.getItem('sgf_catalogo');
