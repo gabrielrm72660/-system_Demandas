@@ -1,7 +1,9 @@
 
+import './index.css'; // Certifique-se de que o caminho para o seu CSS está correto
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
+// ... resto do código
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
