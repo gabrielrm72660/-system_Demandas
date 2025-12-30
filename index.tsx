@@ -5,11 +5,7 @@ import App from './App.tsx';
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+  ReactDOM.createRoot(rootElement).render(<App />);
 }
 
 const root = ReactDOM.createRoot(rootElement);
