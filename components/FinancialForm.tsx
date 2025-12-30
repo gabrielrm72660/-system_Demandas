@@ -1,146 +1,115 @@
-
 import React, { useState } from 'react';
-// Fix: Use correct exported type names from types.ts
-import { Demanda, ItemCatalogo, ItemFinanceiro } from '../types.ts';
-// Fix: Import BDI_MAPPING and formatCurrency alias from constants.ts
-import { BDI_MAPPING, formatCurrency } from '../constants.ts';
+import { Demanda, Empresa, Anexo } from '../types.ts';
+import { calcularMesFaturamento } from '../constants.ts';
 
-interface FinancialFormProps {
-  demand: Demanda;
-  catalog: ItemCatalogo[];
-  onSubmit: (demand: Demanda) => void;
+interface Props {
+  onSubmit: (d: Demanda) => void;
+  empresas: Empresa[];
   onCancel: () => void;
 }
 
-export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, onSubmit, onCancel }) => {
-  const [financialItems, setFinancialItems] = useState<ItemFinanceiro[]>(demand.itensFinanceiros || []);
-  const [selectedItemId, setSelectedItemId] = useState('');
-  const [quantidade, setQuantidade] = useState(1);
-  const [customBdi, setCustomBdi] = useState(0);
+export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) => {
+  const [formData, setFormData] = useState<Partial<Demanda>>({
+    id: crypto.randomUUID(),
+    empresa: '',
+    status: 'Aberta',
+    responsavel: '',
+    setorSala: '', 
+    localAndar: '', 
+    solicitante: '',
+    anexos: [],
+    itensFinanceiros: [],
+    valorTotalGeral: 0,
+    dataSolicitacao: new Date().toISOString().split('T')[0],
+    dataConclusao: '',
+    mesFaturamento: ''
+  });
 
-  const addItem = () => {
-    const catalogItem = catalog.find(i => i.id === selectedItemId);
-    if (!catalogItem) return;
-
-    // Automated BDI logic for items 8, 9, 10, 11
-    const presetBdi = BDI_MAPPING[catalogItem.nome];
-    const bdi = presetBdi !== undefined ? presetBdi : customBdi;
-    
-    const total = (catalogItem.valorUnitario * quantidade) * (1 + bdi / 100);
-
-    // Fix: Align object structure with ItemFinanceiro interface (nome, valorUnitario, unidade, etc)
-    const newRecord: ItemFinanceiro = {
-      id: crypto.randomUUID(),
-      nome: catalogItem.nome,
-      valorUnitario: catalogItem.valorUnitario,
-      unidade: catalogItem.unidade,
-      quantidade,
-      bdi,
-      total
-    };
-
-    setFinancialItems([...financialItems, newRecord]);
-    setSelectedItemId('');
-    setQuantidade(1);
-    setCustomBdi(0);
+  // Lógica para os Itens 9, 10 e 11
+  const handleUpdateItem = (nome: string, valor: number) => {
+    const outros = formData.itensFinanceiros?.filter(i => i.descricao !== nome) || [];
+    const novos = [...outros, { 
+      id: crypto.randomUUID(), 
+      descricao: nome, 
+      valorUnitario: valor, 
+      valorTotal: valor, 
+      quantidade: 1 
+    }];
+    const total = novos.reduce((acc, curr) => acc + curr.valorTotal, 0);
+    setFormData({ ...formData, itensFinanceiros: novos, valorTotalGeral: total });
   };
 
-  const removeItem = (id: string) => {
-    setFinancialItems(financialItems.filter(item => item.id !== id));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach((file: File) => {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const novoAnexo: Anexo = { 
+          id: crypto.randomUUID(),
+          nome: file.name, 
+          tipo: file.type, 
+          tamanho: (file.size / 1024).toFixed(2) + ' KB',
+          base64: evt.target?.result as string,
+          dataUpload: new Date().toISOString()
+        };
+        setFormData(prev => ({ ...prev, anexos: [...(prev.anexos || []), novoAnexo] }));
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const grandTotal = financialItems.reduce((acc, curr) => acc + curr.total, 0);
-
-  const handleSubmit = () => {
-    onSubmit({ ...demand, itensFinanceiros: financialItems });
-  };
-
-  const inputClass = "px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none";
-  const labelClass = "block text-[10px] font-bold uppercase text-indigo-400 mb-1";
-
-  const selectedItem = catalog.find(i => i.id === selectedItemId);
-  const isPresetItem = selectedItem && BDI_MAPPING[selectedItem.nome] !== undefined;
+  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm text-slate-900";
+  const labelClass = "block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest";
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">
-        <h2 className="text-2xl font-bold">Ajuste Financeiro</h2>
-        <p className="text-slate-500">ID: <span className="font-bold">{demand.n4bisOsSei}</span> | Empresa: <span className="font-bold">{demand.empresa}</span></p>
+    <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 text-xl">
+          <i className="fa-solid fa-file-signature"></i>
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">Registro Operacional</h2>
+          <p className="text-slate-500 text-sm italic">Fase 1: Dados básicos e itens 9, 10, 11.</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8 p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800">
-        <div className="md:col-span-2">
-          <label className={labelClass}>Item do Catálogo</label>
-          <select className={`${inputClass} w-full`} value={selectedItemId} onChange={e => setSelectedItemId(e.target.value)}>
-            <option value="">Selecione o Item...</option>
-            {catalog.map(item => <option key={item.id} value={item.id}>{item.nome} ({formatCurrency(item.valorUnitario)})</option>)}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>Qtd</label>
-          <input type="number" min="1" className={`${inputClass} w-full`} value={quantidade} onChange={e => setQuantidade(parseInt(e.target.value))} />
-        </div>
-        <div>
-          <label className={labelClass}>BDI (%)</label>
-          {isPresetItem ? (
-            <div className={`${inputClass} bg-slate-100 dark:bg-slate-700/50 font-bold text-slate-500`}>
-              {BDI_MAPPING[selectedItem.nome]}% (Auto)
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData as Demanda); }} className="space-y-8">
+        
+        {/* ITENS 9, 10, 11 - Adicionados conforme solicitado */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+          {['ITEM 9', 'ITEM 10', 'ITEM 11'].map(item => (
+            <div key={item}>
+              <label className={labelClass}>{item}</label>
+              <input type="number" placeholder="Valor R$" className={inputClass} onChange={(e) => handleUpdateItem(item, Number(e.target.value))} />
             </div>
-          ) : (
-            <input type="number" step="0.01" className={`${inputClass} w-full`} value={customBdi} onChange={e => setCustomBdi(parseFloat(e.target.value))} />
-          )}
+          ))}
         </div>
-        <div className="flex items-end">
-          <button onClick={addItem} disabled={!selectedItemId} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-2 rounded-xl transition-all shadow-lg">Adicionar</button>
+
+        {/* LINHA 1: IDENTIFICAÇÃO (Original) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className={labelClass}>Empresa Contratante</label>
+            <select required className={inputClass} value={formData.empresa} onChange={e => setFormData({...formData, empresa: e.target.value})}>
+              <option value="">Selecione...</option>
+              {empresas.map(emp => <option key={emp.id} value={emp.nome}>{emp.nome}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Nº Citsmart / SEI</label>
+            <input required type="text" placeholder="Ex: 23087..." className={inputClass} value={formData.citsmartSei || ''} onChange={e => setFormData({...formData, citsmartSei: e.target.value})} />
+          </div>
+          <div>
+            <label className={labelClass}>Nº 4BIS / OS</label>
+            <input required type="text" className={inputClass} value={formData.os4bisSei || ''} onChange={e => setFormData({...formData, os4bisSei: e.target.value})} />
+          </div>
         </div>
-      </div>
 
-      <div className="overflow-x-auto mb-8 bg-slate-50 dark:bg-slate-900/20 rounded-2xl border border-slate-100 dark:border-slate-700">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-slate-200 dark:border-slate-700 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              <th className="px-6 py-4">Item / Medida</th>
-              <th className="px-6 py-4">Unitário</th>
-              <th className="px-6 py-4">Qtd</th>
-              <th className="px-6 py-4">BDI (%)</th>
-              <th className="px-6 py-4 text-right">Total c/ BDI</th>
-              <th className="px-6 py-4 text-center">Remover</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {financialItems.map(item => (
-              <tr key={item.id} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="font-bold">{item.nome}</div>
-                  <div className="text-[10px] text-slate-500">{item.unidade}</div>
-                </td>
-                <td className="px-6 py-4 text-sm">{formatCurrency(item.valorUnitario)}</td>
-                <td className="px-6 py-4 text-sm font-bold">{item.quantidade}</td>
-                <td className="px-6 py-4 text-sm">{item.bdi}%</td>
-                <td className="px-6 py-4 text-sm font-black text-right text-indigo-600 dark:text-indigo-400">{formatCurrency(item.total)}</td>
-                <td className="px-6 py-4 text-center">
-                  <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 p-2"><i className="fa-solid fa-trash-can"></i></button>
-                </td>
-              </tr>
-            ))}
-            {financialItems.length === 0 && (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400 italic">Nenhum detalhamento financeiro inserido.</td></tr>
-            )}
-          </tbody>
-          <tfoot>
-            <tr className="bg-indigo-600 text-white">
-              <td colSpan={4} className="px-6 py-6 font-black text-right uppercase tracking-widest text-xs">Total Geral Acumulado</td>
-              <td className="px-6 py-6 text-xl font-black text-right">{formatCurrency(grandTotal)}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-end gap-4 pt-6">
-        <button onClick={onCancel} className="px-8 py-3 rounded-xl font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">Voltar</button>
-        <button onClick={handleSubmit} className="px-10 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg active:scale-95 transition-all">Salvar Financeiro</button>
-      </div>
-    </div>
-  );
-};
+        {/* LINHA 2: TÉCNICO (Original) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-2">
+            <label className={labelClass}>Tipo de Serviço</label>
+            <input required type="text" className={inputClass} value={formData.tipoServico || ''} onChange={e => setFormData({...formData, tipoServico: e.target.value})} />
+          </div>
+          <div>
+            <label className={labelClass}>Solic
