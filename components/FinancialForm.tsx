@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Demand, CatalogItem, FinancialItem } from '../types';
-import { BDI_MAPPING, formatCurrency } from '../constants';
+import { Demand, CatalogItem, FinancialItem } from '../types.ts';
+import { BDI_MAPPING, formatCurrency } from '../constants.ts';
 
 interface FinancialFormProps {
   demand: Demand;
@@ -62,7 +62,7 @@ export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, o
     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">
         <h2 className="text-2xl font-bold">Ajuste Financeiro</h2>
-        <p className="text-slate-500">ID: <span className="font-bold">{demand.nCitsmartSei}</span> | Empresa: <span className="font-bold">{demand.empresa}</span></p>
+        <p className="text-slate-500">ID: <span className="font-bold">{demand.n4bisOsSei}</span> | Empresa: <span className="font-bold">{demand.empresa}</span></p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8 p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800">

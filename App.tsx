@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Auth } from './components/Auth';
-import { Dashboard } from './components/Dashboard';
-import { DemandForm } from './components/DemandForm';
-import { DemandTable } from './components/DemandTable';
-import { Sidebar } from './components/Sidebar';
-import { Settings } from './components/Settings';
-import { FinancialForm } from './components/FinancialForm';
-import { Demand, User, Status, Company, CatalogItem } from './types';
+import { Auth } from './components/Auth.tsx';
+import { Dashboard } from './components/Dashboard.tsx';
+import { DemandForm } from './components/DemandForm.tsx';
+import { DemandTable } from './components/DemandTable.tsx';
+import { Sidebar } from './components/Sidebar.tsx';
+import { Settings } from './components/Settings.tsx';
+import { FinancialForm } from './components/FinancialForm.tsx';
+import { Demand, User, Status, Company, CatalogItem } from './types.ts';
 
 const INITIAL_COMPANIES: Company[] = [
   { id: '1', name: 'Citsmart' },

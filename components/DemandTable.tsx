@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { Demand, User, Status, Company, CatalogItem } from '../types';
-import { STATUS_COLORS, STATUS_OPTIONS, formatCurrency } from '../constants';
+import { Demand, User, Status, Company, CatalogItem } from '../types.ts';
+import { STATUS_COLORS, STATUS_OPTIONS, formatCurrency } from '../constants.ts';
 
 interface DemandTableProps {
   demands: Demand[];
@@ -23,8 +23,8 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
   const filteredDemands = useMemo(() => {
     return demands.filter(d => 
       d.empresa.toLowerCase().includes(search.toLowerCase()) ||
-      d.sei.toLowerCase().includes(search.toLowerCase()) ||
-      d.citsmartId.toLowerCase().includes(search.toLowerCase()) ||
+      d.n4bisOsSei.toLowerCase().includes(search.toLowerCase()) ||
+      d.nCitsmartSei.toLowerCase().includes(search.toLowerCase()) ||
       d.responsavel.toLowerCase().includes(search.toLowerCase()) ||
       d.descricao.toLowerCase().includes(search.toLowerCase())
     ).sort((a, b) => b.createdAt - a.createdAt);
@@ -82,12 +82,12 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
               {filteredDemands.map((d) => {
-                const totalFin = d.financialItems?.reduce((acc, curr) => acc + curr.total, 0) || 0;
+                const totalFin = d.itensFinanceiros?.reduce((acc, curr) => acc + curr.total, 0) || 0;
                 return (
                   <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-colors cursor-pointer" onClick={() => setSelectedDemand(d)}>
                     <td className="px-6 py-4">
-                      <div className="font-bold">{d.citsmartId}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{d.sei}</div>
+                      <div className="font-bold">{d.nCitsmartSei}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">{d.n4bisOsSei}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs font-bold text-slate-600 dark:text-slate-300">{d.mesFaturamento || 'Pendente'}</div>
@@ -95,7 +95,7 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-black text-indigo-600 dark:text-indigo-400">{formatCurrency(totalFin)}</div>
-                      <div className="text-[10px] text-slate-400">{d.financialItems?.length || 0} Itens</div>
+                      <div className="text-[10px] text-slate-400">{d.itensFinanceiros?.length || 0} Itens</div>
                     </td>
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <select value={d.status} onChange={(e) => onUpdateStatus(d.id, e.target.value as Status)} className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer border-none shadow-sm ${STATUS_COLORS[d.status]}`}>
@@ -121,7 +121,7 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 no-print">
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-              <div><h3 className="text-xl font-bold">Resumo da Demanda</h3><p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">{selectedDemand.citsmartId}</p></div>
+              <div><h3 className="text-xl font-bold">Resumo da Demanda</h3><p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">{selectedDemand.nCitsmartSei}</p></div>
               <button onClick={() => setSelectedDemand(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"><i className="fa-solid fa-xmark text-slate-400"></i></button>
             </div>
             <div className="p-8 max-h-[70vh] overflow-y-auto space-y-8">
@@ -132,9 +132,9 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
                 <div><label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Conclusão</label><p className="font-semibold">{selectedDemand.dataConclusao || '---'}</p></div>
               </div>
               <div><label className="text-[10px] uppercase font-bold text-slate-400 block mb-2">Descrição</label><p className="text-sm bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">{selectedDemand.descricao}</p></div>
-              <div><label className="text-[10px] uppercase font-bold text-slate-400 block mb-3">Anexos ({selectedDemand.attachments?.length || 0})</label>
+              <div><label className="text-[10px] uppercase font-bold text-slate-400 block mb-3">Anexos ({selectedDemand.anexos?.length || 0})</label>
                 <div className="flex flex-wrap gap-2">
-                  {selectedDemand.attachments?.map((file, idx) => (
+                  {selectedDemand.anexos?.map((file, idx) => (
                     <a key={idx} href={file.data} download={file.name} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-medium hover:bg-indigo-50 transition-colors">
                       <i className="fa-solid fa-file-arrow-down text-indigo-500"></i> {file.name}
                     </a>
@@ -144,7 +144,7 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
               <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
                 <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Itens Financeiros</h4>
                 <div className="space-y-2">
-                  {selectedDemand.financialItems?.map(item => (
+                  {selectedDemand.itensFinanceiros?.map(item => (
                     <div key={item.id} className="flex justify-between items-center text-xs p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl">
                       <span><span className="font-bold">{item.name}</span> x {item.quantity}</span>
                       <span className="font-black text-indigo-600">{formatCurrency(item.total)}</span>
@@ -152,7 +152,7 @@ export const DemandTable: React.FC<DemandTableProps> = ({ demands, onDelete, onE
                   ))}
                   <div className="flex justify-between items-center pt-4 text-sm font-black text-indigo-600 dark:text-indigo-400">
                     <span>TOTAL GERAL</span>
-                    <span>{formatCurrency(selectedDemand.financialItems?.reduce((a,c) => a+c.total, 0) || 0)}</span>
+                    <span>{formatCurrency(selectedDemand.itensFinanceiros?.reduce((a,c) => a+c.total, 0) || 0)}</span>
                   </div>
                 </div>
               </div>

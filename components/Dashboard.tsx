@@ -4,8 +4,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line
 } from 'recharts';
-import { Demand } from '../types';
-import { formatCurrency } from '../constants';
+import { Demand } from '../types.ts';
+import { formatCurrency } from '../constants.ts';
 
 interface DashboardProps {
   demands: Demand[];
