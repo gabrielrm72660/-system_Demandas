@@ -4,27 +4,29 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line
 } from 'recharts';
-import { Demand } from '../types.ts';
+// Fix: Renamed Demand to Demanda
+import { Demanda } from '../types.ts';
+// Fix: formatCurrency is now correctly exported from constants
 import { formatCurrency } from '../constants.ts';
 
 interface DashboardProps {
-  demands: Demand[];
+  demandas: Demanda[];
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ demands }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
   const [filterMonth, setFilterMonth] = useState('');
   const [filterEmpresa, setFilterEmpresa] = useState('');
   const [filterResponsavel, setFilterResponsavel] = useState('');
 
   const filteredDemands = useMemo(() => {
-    return demands.filter(d => {
+    return demandas.filter(d => {
       const demandMonth = d.dataSolicitacao ? d.dataSolicitacao.substring(0, 7) : '';
       const matchMonth = filterMonth ? demandMonth === filterMonth : true;
       const matchEmpresa = filterEmpresa ? d.empresa === filterEmpresa : true;
-      const matchResponsavel = filterResponsavel ? d.responsavel.toLowerCase().includes(filterResponsavel.toLowerCase()) : true;
+      const matchResponsavel = filterResponsavel ? (d.responsavel || '').toLowerCase().includes(filterResponsavel.toLowerCase()) : true;
       return matchMonth && matchEmpresa && matchResponsavel;
     });
-  }, [demands, filterMonth, filterEmpresa, filterResponsavel]);
+  }, [demandas, filterMonth, filterEmpresa, filterResponsavel]);
 
   const stats = useMemo(() => {
     const totalRequests = filteredDemands.length;
@@ -69,7 +71,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ demands }) => {
     })).slice(-6);
   }, [filteredDemands]);
 
-  const uniqueEmpresas = Array.from(new Set(demands.map(d => d.empresa)));
+  const uniqueEmpresas = Array.from(new Set(demandas.map(d => d.empresa)));
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

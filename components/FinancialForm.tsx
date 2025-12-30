@@ -1,19 +1,21 @@
 
 import React, { useState } from 'react';
-import { Demand, CatalogItem, FinancialItem } from '../types.ts';
+// Fix: Use correct exported type names from types.ts
+import { Demanda, ItemCatalogo, ItemFinanceiro } from '../types.ts';
+// Fix: Import BDI_MAPPING and formatCurrency alias from constants.ts
 import { BDI_MAPPING, formatCurrency } from '../constants.ts';
 
 interface FinancialFormProps {
-  demand: Demand;
-  catalog: CatalogItem[];
-  onSubmit: (demand: Demand) => void;
+  demand: Demanda;
+  catalog: ItemCatalogo[];
+  onSubmit: (demand: Demanda) => void;
   onCancel: () => void;
 }
 
 export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, onSubmit, onCancel }) => {
-  const [financialItems, setFinancialItems] = useState<FinancialItem[]>(demand.itensFinanceiros || []);
+  const [financialItems, setFinancialItems] = useState<ItemFinanceiro[]>(demand.itensFinanceiros || []);
   const [selectedItemId, setSelectedItemId] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantidade, setQuantidade] = useState(1);
   const [customBdi, setCustomBdi] = useState(0);
 
   const addItem = () => {
@@ -21,24 +23,25 @@ export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, o
     if (!catalogItem) return;
 
     // Automated BDI logic for items 8, 9, 10, 11
-    const presetBdi = BDI_MAPPING[catalogItem.name];
+    const presetBdi = BDI_MAPPING[catalogItem.nome];
     const bdi = presetBdi !== undefined ? presetBdi : customBdi;
     
-    const total = (catalogItem.unitValue * quantity) * (1 + bdi / 100);
+    const total = (catalogItem.valorUnitario * quantidade) * (1 + bdi / 100);
 
-    const newRecord: FinancialItem = {
+    // Fix: Align object structure with ItemFinanceiro interface (nome, valorUnitario, unidade, etc)
+    const newRecord: ItemFinanceiro = {
       id: crypto.randomUUID(),
-      name: catalogItem.name,
-      unitValue: catalogItem.unitValue,
-      unitMeasure: catalogItem.unitMeasure,
-      quantity,
+      nome: catalogItem.nome,
+      valorUnitario: catalogItem.valorUnitario,
+      unidade: catalogItem.unidade,
+      quantidade,
       bdi,
       total
     };
 
     setFinancialItems([...financialItems, newRecord]);
     setSelectedItemId('');
-    setQuantity(1);
+    setQuantidade(1);
     setCustomBdi(0);
   };
 
@@ -56,7 +59,7 @@ export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, o
   const labelClass = "block text-[10px] font-bold uppercase text-indigo-400 mb-1";
 
   const selectedItem = catalog.find(i => i.id === selectedItemId);
-  const isPresetItem = selectedItem && BDI_MAPPING[selectedItem.name] !== undefined;
+  const isPresetItem = selectedItem && BDI_MAPPING[selectedItem.nome] !== undefined;
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -70,18 +73,18 @@ export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, o
           <label className={labelClass}>Item do Catálogo</label>
           <select className={`${inputClass} w-full`} value={selectedItemId} onChange={e => setSelectedItemId(e.target.value)}>
             <option value="">Selecione o Item...</option>
-            {catalog.map(item => <option key={item.id} value={item.id}>{item.name} ({formatCurrency(item.unitValue)})</option>)}
+            {catalog.map(item => <option key={item.id} value={item.id}>{item.nome} ({formatCurrency(item.valorUnitario)})</option>)}
           </select>
         </div>
         <div>
           <label className={labelClass}>Qtd</label>
-          <input type="number" min="1" className={`${inputClass} w-full`} value={quantity} onChange={e => setQuantity(parseInt(e.target.value))} />
+          <input type="number" min="1" className={`${inputClass} w-full`} value={quantidade} onChange={e => setQuantidade(parseInt(e.target.value))} />
         </div>
         <div>
           <label className={labelClass}>BDI (%)</label>
           {isPresetItem ? (
             <div className={`${inputClass} bg-slate-100 dark:bg-slate-700/50 font-bold text-slate-500`}>
-              {BDI_MAPPING[selectedItem.name]}% (Auto)
+              {BDI_MAPPING[selectedItem.nome]}% (Auto)
             </div>
           ) : (
             <input type="number" step="0.01" className={`${inputClass} w-full`} value={customBdi} onChange={e => setCustomBdi(parseFloat(e.target.value))} />
@@ -108,11 +111,11 @@ export const FinancialForm: React.FC<FinancialFormProps> = ({ demand, catalog, o
             {financialItems.map(item => (
               <tr key={item.id} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-bold">{item.name}</div>
-                  <div className="text-[10px] text-slate-500">{item.unitMeasure}</div>
+                  <div className="font-bold">{item.nome}</div>
+                  <div className="text-[10px] text-slate-500">{item.unidade}</div>
                 </td>
-                <td className="px-6 py-4 text-sm">{formatCurrency(item.unitValue)}</td>
-                <td className="px-6 py-4 text-sm font-bold">{item.quantity}</td>
+                <td className="px-6 py-4 text-sm">{formatCurrency(item.valorUnitario)}</td>
+                <td className="px-6 py-4 text-sm font-bold">{item.quantidade}</td>
                 <td className="px-6 py-4 text-sm">{item.bdi}%</td>
                 <td className="px-6 py-4 text-sm font-black text-right text-indigo-600 dark:text-indigo-400">{formatCurrency(item.total)}</td>
                 <td className="px-6 py-4 text-center">

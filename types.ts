@@ -1,36 +1,30 @@
 
-export type Status = 'Aberta' | 'Em Execução' | 'Concluída' | 'Faturada';
+export type StatusDemanda = 'Aberta' | 'Em Execução' | 'Concluída' | 'Faturada';
 
-export interface CatalogItem {
+export interface ItemFinanceiro {
   id: string;
-  name: string;
-  unitValue: number;
-  unitMeasure: string;
-}
-
-export interface Attachment {
-  name: string;
-  type: string;
-  size: number;
-  data: string; // Base64
-}
-
-export interface FinancialItem {
-  id: string;
-  name: string;
-  unitValue: number;
-  unitMeasure: string;
-  quantity: number;
+  nome: string;
+  valorUnitario: number;
+  unidade: string;
   bdi: number;
+  quantidade: number;
   total: number;
 }
 
-export interface Company {
+export interface ItemCatalogo {
   id: string;
-  name: string;
+  nome: string;
+  valorUnitario: number;
+  unidade: string;
 }
 
-export interface Demand {
+export interface Anexo {
+  nome: string;
+  tipo: string;
+  data: string; // Armazenado como Base64 string
+}
+
+export interface Demanda {
   id: string;
   empresa: string;
   nCitsmartSei: string;
@@ -44,16 +38,19 @@ export interface Demand {
   dataSolicitacao: string;
   dataConclusao: string;
   mesFaturamento: string;
-  status: Status;
-  anexos: Attachment[];
-  itensFinanceiros: FinancialItem[];
+  status: StatusDemanda;
+  anexos: Anexo[];
+  itensFinanceiros: ItemFinanceiro[];
   createdAt: number;
 }
 
-export type Role = 'ADMIN' | 'USER';
+export interface Empresa {
+  id: string;
+  nome: string;
+}
 
-export interface User {
+export interface Usuario {
   username: string;
-  role: Role;
+  role: 'ADMIN' | 'USER';
   password?: string;
 }

@@ -1,17 +1,19 @@
 
 import React from 'react';
-import { User } from '../types';
+// Fix: Use Usuario instead of non-existent User export
+import { Usuario } from '../types';
 
 interface SidebarProps {
   currentView: string;
-  setView: (view: any) => void;
+  setView: (view: 'dashboard' | 'table' | 'form' | 'settings') => void;
   onLogout: () => void;
-  user: User;
+  user: Usuario;
   darkMode: boolean;
-  toggleDarkMode: () => void;
+  // Fix: Renamed toggleDarkMode to toggleTheme to match App.tsx prop
+  toggleTheme: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user, darkMode, toggleDarkMode }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user, darkMode, toggleTheme }) => {
   const menuItems = [
     { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
     { id: 'table', icon: 'fa-list-check', label: 'Demandas' },
@@ -35,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout
         {menuItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setView(item.id)}
+            onClick={() => setView(item.id as any)}
             className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
               currentView === item.id 
                 ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold' 
@@ -52,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout
         <div className="flex items-center justify-between md:px-4">
            <span className="hidden md:block text-[10px] uppercase font-bold text-slate-400">{darkMode ? 'Modo Escuro' : 'Modo Claro'}</span>
            <button 
-             onClick={toggleDarkMode}
+             onClick={toggleTheme}
              className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform shadow-sm"
              title="Alternar Tema"
            >

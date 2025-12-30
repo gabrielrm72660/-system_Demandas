@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { User } from '../types';
+// Fix: Use Usuario instead of non-existent User export
+import { Usuario } from '../types';
 
 interface AuthProps {
-  onLogin: (user: User) => void;
-  users: User[];
+  onLogin: (user: Usuario) => void;
+  // Fix: Made users optional and provided a default admin login
+  users?: Usuario[];
 }
 
-export const Auth: React.FC<AuthProps> = ({ onLogin, users }) => {
+export const Auth: React.FC<AuthProps> = ({ onLogin, users = [{ username: 'admin', password: 'admin', role: 'ADMIN' }] }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

@@ -1,84 +1,62 @@
 
 import React, { useState, useEffect } from 'react';
+import { Sidebar } from './components/Sidebar.tsx';
 import { Auth } from './components/Auth.tsx';
 import { Dashboard } from './components/Dashboard.tsx';
 import { DemandForm } from './components/DemandForm.tsx';
 import { DemandTable } from './components/DemandTable.tsx';
-import { Sidebar } from './components/Sidebar.tsx';
+import { FinancialModal } from './components/FinancialModal.tsx';
 import { Settings } from './components/Settings.tsx';
-import { FinancialForm } from './components/FinancialForm.tsx';
-import { Demand, User, Status, Company, CatalogItem } from './types.ts';
-
-const INITIAL_COMPANIES: Company[] = [
-  { id: '1', name: 'Citsmart' },
-  { id: '2', name: 'SEI' }
-];
-
-const INITIAL_CATALOG: CatalogItem[] = [
-  { id: 'i8', name: 'Item 8', unitValue: 1000, unitMeasure: 'Un' },
-  { id: 'i9', name: 'Item 9', unitValue: 1000, unitMeasure: 'Un' },
-  { id: 'i10', name: 'Item 10', unitValue: 1000, unitMeasure: 'Un' },
-  { id: 'i11', name: 'Item 11', unitValue: 1000, unitMeasure: 'Un' }
-];
-
-const INITIAL_USERS: User[] = [
-  { username: 'admin', role: 'ADMIN', password: 'admin' }
-];
+import { Demanda, Usuario, Empresa, ItemCatalogo, StatusDemanda } from './types.ts';
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(() => {
+  // --- Estados Persistentes ---
+  const [user, setUser] = useState<Usuario | null>(() => {
     const saved = localStorage.getItem('sgf_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('sgf_all_users');
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
-  });
-
-  const [demands, setDemands] = useState<Demand[]>(() => {
-    const saved = localStorage.getItem('sgf_demands');
+  const [demandas, setDemandas] = useState<Demanda[]>(() => {
+    const saved = localStorage.getItem('sgf_demandas');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [companies, setCompanies] = useState<Company[]>(() => {
-    const saved = localStorage.getItem('sgf_companies');
-    return saved ? JSON.parse(saved) : INITIAL_COMPANIES;
+  const [empresas, setEmpresas] = useState<Empresa[]>(() => {
+    const saved = localStorage.getItem('sgf_empresas');
+    return saved ? JSON.parse(saved) : [{ id: '1', nome: 'Citsmart' }, { id: '2', nome: 'SEI' }];
   });
 
-  const [catalog, setCatalog] = useState<CatalogItem[]>(() => {
-    const saved = localStorage.getItem('sgf_catalog');
-    return saved ? JSON.parse(saved) : INITIAL_CATALOG;
+  const [catalogo, setCatalogo] = useState<ItemCatalogo[]>(() => {
+    const saved = localStorage.getItem('sgf_catalogo');
+    return saved ? JSON.parse(saved) : [
+      { id: 'i8', nome: 'Item 8', valorUnitario: 150.00, unidade: 'H/H' },
+      { id: 'i9', nome: 'Item 9', valorUnitario: 220.50, unidade: 'Un' },
+      { id: 'i10', nome: 'Item 10', valorUnitario: 310.00, unidade: 'M2' },
+      { id: 'i11', nome: 'Item 11', valorUnitario: 95.00, unidade: 'KM' }
+    ];
   });
 
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('sgf_darkmode');
-    return saved === 'true';
-  });
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('sgf_theme') === 'dark');
+  
+  // --- Estados de Navegação ---
+  const [currentView, setCurrentView] = useState<'dashboard' | 'table' | 'form' | 'settings'>('dashboard');
+  const [selectedDemandaFin, setSelectedDemandaFin] = useState<Demanda | null>(null);
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'table' | 'form' | 'settings' | 'financial'>('dashboard');
-  const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
-
+  // --- Efeitos de Persistência ---
   useEffect(() => {
-    localStorage.setItem('sgf_demands', JSON.stringify(demands));
-  }, [demands]);
-
-  useEffect(() => {
-    localStorage.setItem('sgf_companies', JSON.stringify(companies));
-    localStorage.setItem('sgf_catalog', JSON.stringify(catalog));
-    localStorage.setItem('sgf_all_users', JSON.stringify(users));
-    localStorage.setItem('sgf_darkmode', darkMode.toString());
+    localStorage.setItem('sgf_demandas', JSON.stringify(demandas));
+    localStorage.setItem('sgf_empresas', JSON.stringify(empresas));
+    localStorage.setItem('sgf_catalogo', JSON.stringify(catalogo));
+    localStorage.setItem('sgf_theme', darkMode ? 'dark' : 'light');
     
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [companies, catalog, users, darkMode]);
+    if (darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [demandas, empresas, catalogo, darkMode]);
 
-  const handleLogin = (loggedUser: User) => {
-    setUser(loggedUser);
-    localStorage.setItem('sgf_user', JSON.stringify(loggedUser));
+  // --- Handlers ---
+  const handleLogin = (u: Usuario) => {
+    setUser(u);
+    localStorage.setItem('sgf_user', JSON.stringify(u));
   };
 
   const handleLogout = () => {
@@ -86,114 +64,94 @@ const App: React.FC = () => {
     localStorage.removeItem('sgf_user');
   };
 
-  const addDemand = (demand: Demand) => {
-    setDemands(prev => {
-      const exists = prev.find(d => d.id === demand.id);
-      if (exists) {
-        return prev.map(d => d.id === demand.id ? demand : d);
+  const saveDemanda = (d: Demanda) => {
+    setDemandas(prev => {
+      const index = prev.findIndex(item => item.id === d.id);
+      if (index !== -1) {
+        const newArr = [...prev];
+        newArr[index] = d;
+        return newArr;
       }
-      return [...prev, demand];
+      return [d, ...prev];
     });
     setCurrentView('table');
   };
 
-  const deleteDemand = (id: string) => {
+  const deleteDemanda = (id: string) => {
     if (user?.role !== 'ADMIN') return;
-    setDemands(prev => prev.filter(d => d.id !== id));
+    setDemandas(prev => prev.filter(d => d.id !== id));
   };
 
-  const updateStatus = (id: string, status: Status) => {
-    setDemands(prev => prev.map(d => d.id === id ? { ...d, status } : d));
+  const updateStatus = (id: string, status: StatusDemanda) => {
+    setDemandas(prev => prev.map(d => d.id === id ? { ...d, status } : d));
   };
 
-  const handleEdit = (demand: Demand) => {
-    setEditingDemand(demand);
-    setCurrentView('form');
-  };
-
-  const handleFinancial = (demand: Demand) => {
-    setEditingDemand(demand);
-    setCurrentView('financial');
-  };
-
-  const importJSON = (data: any) => {
-    if (!data) return;
-    if (data.demands) setDemands(data.demands);
-    if (data.companies) setCompanies(data.companies);
-    if (data.catalog) setCatalog(data.catalog);
-    if (data.users) setUsers(data.users);
-  };
-
-  if (!user) {
-    return <Auth onLogin={handleLogin} users={users} />;
-  }
+  // --- Renderização Condicional de Auth ---
+  if (!user) return <Auth onLogin={handleLogin} />;
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       <Sidebar 
         currentView={currentView} 
         setView={setCurrentView} 
-        onLogout={handleLogout} 
-        user={user}
+        user={user} 
+        onLogout={handleLogout}
         darkMode={darkMode}
-        toggleDarkMode={() => setDarkMode(!darkMode)}
+        toggleTheme={() => setDarkMode(!darkMode)}
       />
       
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {currentView === 'dashboard' && <Dashboard demands={demands} />}
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+        <div className="max-w-7xl mx-auto">
+          {currentView === 'dashboard' && <Dashboard demandas={demandas} />}
           
           {currentView === 'table' && (
             <DemandTable 
-              demands={demands} 
-              onDelete={deleteDemand} 
-              onEdit={handleEdit} 
-              onFinancial={handleFinancial}
+              demandas={demandas} 
+              onEdit={(d) => {
+                // Ao clicar em editar, podemos abrir o form operacional
+                // mas para o fluxo de 2 etapas, geralmente usamos o onFinancial
+                saveDemanda(d); 
+              }} 
+              onFinancial={setSelectedDemandaFin}
+              onDelete={deleteDemanda}
               onUpdateStatus={updateStatus}
-              onImport={importJSON}
               user={user}
-              companies={companies}
-              catalog={catalog}
-              users={users}
+              companies={empresas}
+              catalog={catalogo}
             />
           )}
 
           {currentView === 'form' && (
             <DemandForm 
-              onSubmit={addDemand} 
-              editingDemand={editingDemand} 
-              companies={companies}
-              onCancel={() => {
-                setEditingDemand(null);
-                setCurrentView('table');
-              }} 
-            />
-          )}
-
-          {currentView === 'financial' && editingDemand && (
-            <FinancialForm 
-              demand={editingDemand}
-              catalog={catalog}
-              onSubmit={addDemand}
-              onCancel={() => {
-                setEditingDemand(null);
-                setCurrentView('table');
-              }}
+              onSubmit={saveDemanda} 
+              empresas={empresas} 
+              onCancel={() => setCurrentView('table')} 
             />
           )}
 
           {currentView === 'settings' && user.role === 'ADMIN' && (
             <Settings 
-              companies={companies}
-              setCompanies={setCompanies}
-              catalog={catalog}
-              setCatalog={setCatalog}
-              users={users}
-              setUsers={setUsers}
+              empresas={empresas} 
+              setEmpresas={setEmpresas} 
+              catalogo={catalogo} 
+              setCatalogo={setCatalogo} 
             />
           )}
         </div>
       </main>
+
+      {/* Etapa 2 do Formulário: Detalhamento Financeiro / Itens */}
+      {selectedDemandaFin && (
+        <FinancialModal 
+          demanda={selectedDemandaFin}
+          catalogo={catalogo}
+          onClose={() => setSelectedDemandaFin(null)}
+          onSave={(updated) => {
+            saveDemanda(updated);
+            setSelectedDemandaFin(null);
+          }}
+        />
+      )}
     </div>
   );
 };
