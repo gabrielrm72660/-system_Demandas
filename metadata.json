@@ -1,0 +1,5 @@
+{
+  "name": "SGF - Sistema de Gestão de Demandas e Faturamento",
+  "description": "A comprehensive demand management and billing system with RBAC, data visualization, and automated BDI calculations.",
+  "requestFramePermissions": []
+}
