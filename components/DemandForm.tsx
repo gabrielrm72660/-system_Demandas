@@ -11,10 +11,10 @@ interface DemandFormProps {
 }
 
 export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, editingDemand, companies }) => {
-  const [formData, setFormData] = useState<Omit<Demand, 'id' | 'createdAt' | 'financialItems'>>({
+  const [formData, setFormData] = useState<Omit<Demand, 'id' | 'createdAt' | 'itensFinanceiros'>>({
     empresa: '',
-    citsmartId: '',
-    sei: '',
+    nCitsmartSei: '',
+    n4bisOsSei: '',
     tipoServico: '',
     descricao: '',
     solicitante: '',
@@ -25,15 +25,15 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
     dataConclusao: '',
     mesFaturamento: '',
     status: 'Aberta' as Status,
-    attachments: [],
+    anexos: [],
   });
 
   useEffect(() => {
     if (editingDemand) {
       setFormData({
         empresa: editingDemand.empresa,
-        citsmartId: editingDemand.citsmartId,
-        sei: editingDemand.sei,
+        nCitsmartSei: editingDemand.nCitsmartSei,
+        n4bisOsSei: editingDemand.n4bisOsSei,
         tipoServico: editingDemand.tipoServico,
         descricao: editingDemand.descricao,
         solicitante: editingDemand.solicitante,
@@ -44,7 +44,7 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
         dataConclusao: editingDemand.dataConclusao,
         mesFaturamento: editingDemand.mesFaturamento,
         status: editingDemand.status,
-        attachments: editingDemand.attachments || [],
+        anexos: editingDemand.anexos || [],
       });
     }
   }, [editingDemand]);
@@ -58,7 +58,6 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
     const files = e.target.files;
     if (!files) return;
 
-    // Fix: Explicitly type the file parameter to resolve 'unknown' type errors when using Array.from(files)
     Array.from(files).forEach((file: File) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
@@ -71,7 +70,7 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
         };
         setFormData(prev => ({
           ...prev,
-          attachments: [...prev.attachments, newAttachment]
+          anexos: [...prev.anexos, newAttachment]
         }));
       };
       reader.readAsDataURL(file);
@@ -81,7 +80,7 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
   const removeAttachment = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
+      anexos: prev.anexos.filter((_, i) => i !== index)
     }));
   };
 
@@ -90,7 +89,7 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
     const demand: Demand = {
       ...formData,
       id: editingDemand?.id || crypto.randomUUID(),
-      financialItems: editingDemand?.financialItems || [],
+      itensFinanceiros: editingDemand?.itensFinanceiros || [],
       createdAt: editingDemand?.createdAt || Date.now(),
     };
     onSubmit(demand);
@@ -102,8 +101,8 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 animate-in fade-in duration-500">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold">{editingDemand ? 'Editar Demanda' : 'Nova Demanda'}</h2>
-        <p className="text-slate-500">Preencha os dados básicos e anexe documentos pertinentes.</p>
+        <h2 className="text-2xl font-bold">{editingDemand ? 'Editar Cadastro' : 'Nova Demanda'}</h2>
+        <p className="text-slate-500">Preencha as informações básicas da solicitação.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,11 +116,11 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
           </div>
           <div>
             <label className={labelClass}>Nº Citsmart/SEI (Identificação)</label>
-            <input type="text" required className={inputClass} value={formData.citsmartId} onChange={e => setFormData({...formData, citsmartId: e.target.value})} />
+            <input type="text" required className={inputClass} value={formData.nCitsmartSei} onChange={e => setFormData({...formData, nCitsmartSei: e.target.value})} />
           </div>
           <div>
             <label className={labelClass}>Nº 4BIS/OS/SEI (Processo)</label>
-            <input type="text" required className={inputClass} value={formData.sei} onChange={e => setFormData({...formData, sei: e.target.value})} />
+            <input type="text" required className={inputClass} value={formData.n4bisOsSei} onChange={e => setFormData({...formData, n4bisOsSei: e.target.value})} />
           </div>
           <div>
             <label className={labelClass}>Tipo de Serviço</label>
@@ -164,19 +163,19 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
           </div>
           <div>
             <label className={labelClass}>Mês de Faturamento</label>
-            <input type="text" readOnly className={`${inputClass} bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed`} value={formData.mesFaturamento} />
+            <input type="text" readOnly className={`${inputClass} bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed font-semibold text-indigo-600 dark:text-indigo-400`} value={formData.mesFaturamento} />
           </div>
         </div>
 
-        <div className="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800">
+        <div className="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-700">
           <label className={labelClass}>Anexos (PDF, Excel, Word, Imagens)</label>
           <input type="file" multiple onChange={handleFileUpload} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
           
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {formData.attachments.map((file, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+            {formData.anexos.map((file, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm animate-in zoom-in-95 duration-200">
                 <div className="flex items-center gap-2 truncate">
-                  <i className="fa-solid fa-file text-indigo-500"></i>
+                  <i className="fa-solid fa-paperclip text-indigo-500"></i>
                   <span className="text-xs font-medium truncate">{file.name}</span>
                 </div>
                 <button type="button" onClick={() => removeAttachment(idx)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg transition-all">
@@ -190,7 +189,7 @@ export const DemandForm: React.FC<DemandFormProps> = ({ onSubmit, onCancel, edit
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
           <button type="button" onClick={onCancel} className="px-8 py-3 rounded-xl font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">Cancelar</button>
           <button type="submit" className="px-10 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none transition-all">
-            {editingDemand ? 'Salvar Alterações' : 'Criar Demanda'}
+            {editingDemand ? 'Salvar Alterações' : 'Registrar Demanda'}
           </button>
         </div>
       </form>

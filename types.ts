@@ -15,9 +15,8 @@ export interface Attachment {
   data: string; // Base64
 }
 
-export interface FinancialRecord {
+export interface FinancialItem {
   id: string;
-  itemId: string;
   name: string;
   unitValue: number;
   unitMeasure: string;
@@ -34,8 +33,8 @@ export interface Company {
 export interface Demand {
   id: string;
   empresa: string;
-  citsmartId: string;
-  sei: string;
+  nCitsmartSei: string;
+  n4bisOsSei: string;
   tipoServico: string;
   descricao: string;
   solicitante: string;
@@ -46,8 +45,8 @@ export interface Demand {
   dataConclusao: string;
   mesFaturamento: string;
   status: Status;
-  attachments: Attachment[];
-  financialItems: FinancialRecord[];
+  anexos: Attachment[];
+  itensFinanceiros: FinancialItem[];
   createdAt: number;
 }
 
