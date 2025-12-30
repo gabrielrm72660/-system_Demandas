@@ -1,5 +1,5 @@
 
-import './index.css'; // Certifique-se de que o caminho para o seu CSS está correto
+import 'index.css'; // Certifique-se de que o caminho para o seu CSS está correto
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
