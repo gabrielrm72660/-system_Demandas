@@ -147,6 +147,23 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
             <span className="text-xl font-black text-indigo-600">R$ {formData.valorTotalGeral?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-100 rounded-xl">
+  {['ITEM 9', 'ITEM 10', 'ITEM 11'].map(item => (
+    <div key={item} className="flex flex-col gap-2 p-3 bg-white rounded-lg border">
+      <span className="font-bold text-xs">{item}</span>
+      <input 
+        type="number" 
+        placeholder="Valor R$" 
+        className="border p-2 rounded text-sm"
+        onChange={(e) => {
+          // Lógica para salvar o valor digitado no estado do formulário
+          const valor = Number(e.target.value);
+          handleUpdateItemFinanceiro(item, valor); 
+        }}
+      />
+    </div>
+  ))}
+</div>
 
         {/* DADOS DA EMPRESA */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
