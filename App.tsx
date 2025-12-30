@@ -60,7 +60,7 @@ const App: React.FC = () => {
   if (!user) return <Auth onLogin={(u) => { setUser(u); localStorage.setItem('sgf_user', JSON.stringify(u)); }} />;
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 dark:text-slate-100 transition-colors">
       <Sidebar currentView={currentView} setView={setCurrentView} user={user} onLogout={() => setUser(null)} darkMode={darkMode} toggleTheme={() => setDarkMode(!darkMode)} />
       <main className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
