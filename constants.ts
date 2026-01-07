@@ -10,6 +10,41 @@ export const BDI_MAPPING = BDI_FIXO;
 
 export const STATUS_OPTIONS: string[] = ['Aberta', 'Em Execução', 'Concluída', 'Faturada'];
 
+export const TIPO_SERVICO_OPTIONS: string[] = [
+  'Ar-condicionado',
+  'Chaveiro',
+  'Hidrossanitário',
+  'Iluminação',
+  'Mudança de Layout',
+  'Manutenção Predial',
+  'Marcenaria',
+  'Pintura',
+  'Piso',
+  'Rede Elétrica',
+  'Rede Lógica',
+  'Reparos',
+  'Forro',
+  'Persiana',
+  'Divisória'
+];
+
+export const RESPONSAVEL_TECNICO_OPTIONS: string[] = [
+  'Adriano',
+  'Bruno',
+  'Carla',
+  'Clésio',
+  'Gabriel Pin',
+  'Gabriel R',
+  'Gilcélia',
+  'Keilla',
+  'Maria',
+  'Mariana',
+  'Moacir',
+  'Ricardo',
+  'Sérgio',
+  'Vitória'
+];
+
 export const STATUS_COLORS: Record<string, string> = {
   'Aberta': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
   'Em Execução': 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800',

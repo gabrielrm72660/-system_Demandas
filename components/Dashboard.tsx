@@ -1,13 +1,12 @@
 
+// Import React to fix "Cannot find namespace 'React'" error when using React.FC
 import React, { useMemo, useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line
 } from 'recharts';
-// Fix: Renamed Demand to Demanda
 import { Demanda } from '../types.ts';
-// Fix: formatCurrency is now correctly exported from constants
-import { formatCurrency } from '../constants.ts';
+import { formatCurrency, TIPO_SERVICO_OPTIONS } from '../constants.ts';
 
 interface DashboardProps {
   demandas: Demanda[];
@@ -16,17 +15,17 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
   const [filterMonth, setFilterMonth] = useState('');
   const [filterEmpresa, setFilterEmpresa] = useState('');
-  const [filterResponsavel, setFilterResponsavel] = useState('');
+  const [filterTipo, setFilterTipo] = useState('');
 
   const filteredDemands = useMemo(() => {
     return demandas.filter(d => {
       const demandMonth = d.dataSolicitacao ? d.dataSolicitacao.substring(0, 7) : '';
       const matchMonth = filterMonth ? demandMonth === filterMonth : true;
       const matchEmpresa = filterEmpresa ? d.empresa === filterEmpresa : true;
-      const matchResponsavel = filterResponsavel ? (d.responsavel || '').toLowerCase().includes(filterResponsavel.toLowerCase()) : true;
-      return matchMonth && matchEmpresa && matchResponsavel;
+      const matchTipo = filterTipo ? d.tipoServico === filterTipo : true;
+      return matchMonth && matchEmpresa && matchTipo;
     });
-  }, [demandas, filterMonth, filterEmpresa, filterResponsavel]);
+  }, [demandas, filterMonth, filterEmpresa, filterTipo]);
 
   const stats = useMemo(() => {
     const totalRequests = filteredDemands.length;
@@ -96,6 +95,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
             <option value="">Todas Empresas</option>
             {uniqueEmpresas.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
+          <select 
+            value={filterTipo}
+            onChange={(e) => setFilterTipo(e.target.value)}
+            className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Todos os Tipos</option>
+            {TIPO_SERVICO_OPTIONS.map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
+          </select>
         </div>
       </div>
 
@@ -140,8 +147,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
           <h3 className="text-lg font-bold mb-6">Volume de Demandas (Mensal)</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64 min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={volumeData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} dy={10} />
@@ -158,8 +165,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
 
         <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
           <h3 className="text-lg font-bold mb-6">Previsão de Faturamento</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64 min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart data={billingTrendData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} dy={10} />

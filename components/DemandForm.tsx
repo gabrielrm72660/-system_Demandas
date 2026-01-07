@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Demanda, Empresa, Anexo } from '../types.ts';
-import { calcularMesFaturamento } from '../constants.ts';
+import { calcularMesFaturamento, TIPO_SERVICO_OPTIONS, RESPONSAVEL_TECNICO_OPTIONS } from '../constants.ts';
 
 interface Props {
   onSubmit: (d: Demanda) => void;
@@ -14,15 +15,12 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
     empresa: '',
     status: 'Aberta',
     responsavel: '',
-    setorSala: '', 
-    localAndar: '', 
+    setor: '',
+    local: '',
     solicitante: '',
     anexos: [],
     itensFinanceiros: [],
-    valorTotalGeral: 0,
-    dataSolicitacao: new Date().toISOString().split('T')[0],
-    dataConclusao: '',
-    mesFaturamento: ''
+    dataSolicitacao: new Date().toISOString().split('T')[0]
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,14 +31,7 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
       const reader = new FileReader();
       reader.onload = (evt) => {
         const base64 = evt.target?.result as string;
-        const novoAnexo: Anexo = { 
-          id: crypto.randomUUID(),
-          nome: file.name, 
-          tipo: file.type, 
-          tamanho: (file.size / 1024).toFixed(2) + ' KB',
-          base64: base64,
-          dataUpload: new Date().toISOString()
-        };
+        const novoAnexo: Anexo = { nome: file.name, tipo: file.type, data: base64 };
         setFormData(prev => ({ ...prev, anexos: [...(prev.anexos || []), novoAnexo] }));
       };
       reader.readAsDataURL(file);
@@ -49,26 +40,25 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ ...formData } as Demanda);
+    onSubmit({ ...formData, createdAt: Date.now() } as Demanda);
   };
 
-  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm text-slate-900";
+  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm";
   const labelClass = "block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest";
 
   return (
-    <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 text-xl">
+        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl">
           <i className="fa-solid fa-file-signature"></i>
         </div>
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Registro Operacional</h2>
-          <p className="text-slate-500 text-sm italic">Dados básicos e identificação técnica da demanda.</p>
+          <h2 className="text-2xl font-black">Registro Operacional</h2>
+          <p className="text-slate-500 text-sm italic">Preencha os dados básicos da demanda para iniciar o fluxo.</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* IDENTIFICAÇÃO */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className={labelClass}>Empresa Contratante</label>
@@ -79,19 +69,28 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
           </div>
           <div>
             <label className={labelClass}>Nº Citsmart / SEI</label>
-            <input required type="text" placeholder="Ex: 23087.0001/2024" className={inputClass} value={formData.citsmartSei || ''} onChange={e => setFormData({...formData, citsmartSei: e.target.value})} />
+            <input required type="text" placeholder="Ex: 23087.0001/2024" className={inputClass} value={formData.nCitsmartSei || ''} onChange={e => setFormData({...formData, nCitsmartSei: e.target.value})} />
           </div>
           <div>
             <label className={labelClass}>Nº 4BIS / OS / SEI</label>
-            <input required type="text" placeholder="Ex: OS-2024-001" className={inputClass} value={formData.os4bisSei || ''} onChange={e => setFormData({...formData, os4bisSei: e.target.value})} />
+            <input required type="text" placeholder="Ex: OS-2024-001" className={inputClass} value={formData.n4bisOsSei || ''} onChange={e => setFormData({...formData, n4bisOsSei: e.target.value})} />
           </div>
         </div>
 
-        {/* TÉCNICO */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-2">
             <label className={labelClass}>Tipo de Serviço</label>
-            <input required type="text" placeholder="Ex: Manutenção de Ar Condicionado" className={inputClass} value={formData.tipoServico || ''} onChange={e => setFormData({...formData, tipoServico: e.target.value})} />
+            <select 
+              required 
+              className={inputClass} 
+              value={formData.tipoServico || ''} 
+              onChange={e => setFormData({...formData, tipoServico: e.target.value})}
+            >
+              <option value="">Selecione o serviço...</option>
+              {TIPO_SERVICO_OPTIONS.map(opcao => (
+                <option key={opcao} value={opcao}>{opcao}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className={labelClass}>Solicitante</label>
@@ -99,30 +98,37 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
           </div>
           <div>
             <label className={labelClass}>Responsável Técnico</label>
-            <input required type="text" className={inputClass} value={formData.responsavel || ''} onChange={e => setFormData({...formData, responsavel: e.target.value})} />
+            <select 
+              required 
+              className={inputClass} 
+              value={formData.responsavel || ''} 
+              onChange={e => setFormData({...formData, responsavel: e.target.value})}
+            >
+              <option value="">Selecione o responsável...</option>
+              {RESPONSAVEL_TECNICO_OPTIONS.map(opcao => (
+                <option key={opcao} value={opcao}>{opcao}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* LOCALIZAÇÃO */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className={labelClass}>Setor / Sala</label>
-            <input type="text" placeholder="Ex: Financeiro - Sala 102" className={inputClass} value={formData.setorSala || ''} onChange={e => setFormData({...formData, setorSala: e.target.value})} />
+            <input type="text" className={inputClass} value={formData.setor || ''} onChange={e => setFormData({...formData, setor: e.target.value})} />
           </div>
           <div>
-            <label className={labelClass}>Local / Andar / Bloco</label>
-            <input type="text" placeholder="Ex: Bloco A - 3º Andar" className={inputClass} value={formData.localAndar || ''} onChange={e => setFormData({...formData, localAndar: e.target.value})} />
+            <label className={labelClass}>Local / Andar</label>
+            <input type="text" className={inputClass} value={formData.local || ''} onChange={e => setFormData({...formData, local: e.target.value})} />
           </div>
         </div>
 
-        {/* DESCRIÇÃO */}
         <div>
           <label className={labelClass}>Descrição Detalhada</label>
-          <textarea required rows={4} className={`${inputClass} resize-none`} placeholder="Descreva os detalhes do serviço..." value={formData.descricao || ''} onChange={e => setFormData({...formData, descricao: e.target.value})} />
+          <textarea required rows={4} className={`${inputClass} resize-none`} placeholder="Descreva os detalhes da solicitação..." value={formData.descricao || ''} onChange={e => setFormData({...formData, descricao: e.target.value})} />
         </div>
 
-        {/* DATAS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className={labelClass}>Data da Solicitação</label>
             <input required type="date" className={inputClass} value={formData.dataSolicitacao} onChange={e => setFormData({...formData, dataSolicitacao: e.target.value})} />
@@ -130,38 +136,44 @@ export const DemandForm: React.FC<Props> = ({ onSubmit, empresas, onCancel }) =>
           <div>
             <label className={labelClass}>Data da Conclusão</label>
             <input type="date" className={inputClass} value={formData.dataConclusao || ''} onChange={e => {
-              const dataConcl = e.target.value;
-              const faturamento = calcularMesFaturamento(dataConcl);
-              setFormData({...formData, dataConclusao: dataConcl, mesFaturamento: faturamento});
+              const faturamento = calcularMesFaturamento(e.target.value);
+              setFormData({...formData, dataConclusao: e.target.value, mesFaturamento: faturamento});
             }} />
           </div>
           <div>
-            <label className={labelClass}>Mês de Faturamento</label>
-            <input readOnly type="text" className={`${inputClass} bg-slate-100 font-black text-indigo-600`} value={formData.mesFaturamento || 'Aguardando Conclusão'} />
+            <label className={labelClass}>Mês de Faturamento (Auto)</label>
+            <input readOnly type="text" className={`${inputClass} bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed text-indigo-600 font-black`} value={formData.mesFaturamento || 'Pendente de Conclusão'} />
           </div>
         </div>
 
-        {/* ANEXOS */}
-        <div className="p-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-          <label className={labelClass}>Documentação (Fotos, OS, etc)</label>
-          <input type="file" multiple className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white" onChange={handleFileChange} />
-          <div className="flex flex-wrap gap-2 mt-4">
-            {formData.anexos?.map((anexo, i) => (
-              <div key={anexo.id} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg text-xs border border-slate-200">
-                <span className="truncate max-w-[150px] font-medium">{anexo.nome}</span>
-                <button type="button" onClick={() => setFormData(prev => ({...prev, anexos: prev.anexos?.filter((_, idx) => idx !== i)}))} className="text-red-500">
-                  <i className="fa-solid fa-circle-xmark"></i>
-                </button>
-              </div>
-            ))}
+        <div className="p-8 bg-slate-50 dark:bg-slate-900/30 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+          <label className={labelClass}>Anexos e Documentação (PDF, Excel, Word, Imagens)</label>
+          <div className="flex flex-col items-center justify-center gap-4">
+            <input 
+              type="file" 
+              multiple 
+              accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" 
+              className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer transition-all" 
+              onChange={handleFileChange} 
+            />
+            <div className="flex flex-wrap gap-2 w-full">
+              {formData.anexos?.map((anexo, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-xs border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <i className="fa-solid fa-file-lines text-indigo-500"></i>
+                  <span className="truncate max-w-[150px] font-medium">{anexo.nome}</span>
+                  <button type="button" onClick={() => setFormData(prev => ({...prev, anexos: prev.anexos?.filter((_, idx) => idx !== i)}))} className="ml-1 text-slate-300 hover:text-red-500">
+                    <i className="fa-solid fa-circle-xmark"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* AÇÕES */}
-        <div className="flex justify-end gap-4 pt-6 border-t border-slate-100">
-          <button type="button" onClick={onCancel} className="px-8 py-3 font-bold text-slate-400">Cancelar</button>
-          <button type="submit" className="px-12 py-3 font-black uppercase tracking-widest text-xs bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-700 transition-all">
-            Salvar Demanda
+        <div className="flex justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-700">
+          <button type="button" onClick={onCancel} className="px-8 py-3 font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">Cancelar</button>
+          <button type="submit" className="px-12 py-3 font-black uppercase tracking-widest text-xs bg-indigo-600 text-white rounded-xl shadow-xl shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all">
+            Salvar e Prosseguir
           </button>
         </div>
       </form>
