@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  LineChart, Line
+  LineChart, Line, Legend
 } from 'recharts';
 import { Demanda } from '../types.ts';
 import { formatCurrency, TIPO_SERVICO_OPTIONS } from '../constants.ts';
@@ -40,6 +40,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
     return { totalRequests, completionRate, totalValue };
   }, [filteredDemands]);
 
+  // Pegar os últimos 6 meses presentes nos dados
+  const last6Months = useMemo(() => {
+    const months = Array.from(new Set(demandas.map(d => d.dataSolicitacao?.substring(0, 7) || '')))
+      .filter(m => m !== '')
+      .sort()
+      .slice(-6);
+    return months;
+  }, [demandas]);
+
   const volumeData = useMemo(() => {
     const map: Record<string, number> = {};
     filteredDemands.forEach(d => {
@@ -51,6 +60,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
       demandas: map[month]
     })).slice(-6);
   }, [filteredDemands]);
+
+  // Dados para o gráfico empilhado por tipo de serviço
+  const typeDistributionData = useMemo(() => {
+    return last6Months.map(month => {
+      const entry: any = { name: month };
+      TIPO_SERVICO_OPTIONS.forEach(tipo => {
+        const count = filteredDemands.filter(d => 
+          d.dataSolicitacao?.startsWith(month) && d.tipoServico === tipo
+        ).length;
+        if (count > 0) entry[tipo] = count;
+      });
+      return entry;
+    });
+  }, [filteredDemands, last6Months]);
 
   const billingTrendData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -72,8 +95,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
 
   const uniqueEmpresas = Array.from(new Set(demandas.map(d => d.empresa)));
 
+  // Cores dinâmicas para os tipos de serviço no gráfico
+  const typeColors = [
+    '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', 
+    '#10b981', '#06b6d4', '#3b82f6', '#64748b', '#78350f',
+    '#059669', '#d946ef', '#fb923c', '#4ade80', '#2dd4bf'
+  ];
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Resumo Executivo</h1>
@@ -179,6 +209,82 @@ export const Dashboard: React.FC<DashboardProps> = ({ demandas }) => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <h3 className="text-lg font-bold mb-6">Distribuição de Tickets por Categoria</h3>
+        <div className="h-96 min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={typeDistributionData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+              <Tooltip 
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '20px' }} />
+              {TIPO_SERVICO_OPTIONS.map((tipo, index) => (
+                <Bar 
+                  key={tipo} 
+                  dataKey={tipo} 
+                  stackId="a" 
+                  fill={typeColors[index % typeColors.length]} 
+                  radius={[0, 0, 0, 0]}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <h3 className="text-lg font-bold mb-6">Detalhamento de Demandas Mensais por Item</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                <th className="px-6 py-4">Tipo de Ticket</th>
+                {last6Months.map(month => (
+                  <th key={month} className="px-6 py-4 text-center">{month}</th>
+                ))}
+                <th className="px-6 py-4 text-center bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+              {TIPO_SERVICO_OPTIONS.map(tipo => {
+                const rowTotal = last6Months.reduce((sum, month) => {
+                  return sum + filteredDemands.filter(d => d.dataSolicitacao?.startsWith(month) && d.tipoServico === tipo).length;
+                }, 0);
+
+                if (rowTotal === 0 && !filterTipo) return null; // Ocultar se não houver dados, a menos que filtrado
+                if (filterTipo && tipo !== filterTipo) return null;
+
+                return (
+                  <tr key={tipo} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-colors">
+                    <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{tipo}</td>
+                    {last6Months.map(month => {
+                      const count = filteredDemands.filter(d => d.dataSolicitacao?.startsWith(month) && d.tipoServico === tipo).length;
+                      return (
+                        <td key={month} className="px-6 py-4 text-center">
+                          {count > 0 ? (
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-black">
+                              {count}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-600">-</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td className="px-6 py-4 text-center bg-indigo-50/50 dark:bg-indigo-900/10 font-black text-indigo-600 dark:text-indigo-400">
+                      {rowTotal}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

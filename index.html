@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SGF - Gestão de Demandas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            // Extensões de tema se necessário
+          }
+        }
+      }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @media print {
@@ -13,6 +23,11 @@
             .print-only { display: block !important; }
         }
         .print-only { display: none; }
+        
+        /* Ajustes finos de transição de cores */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
     </style>
 <script type="importmap">
 {
@@ -30,7 +45,6 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
     <div id="root"></div>
-    <!-- Ponto de entrada para execução no GitHub -->
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>

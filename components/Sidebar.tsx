@@ -1,6 +1,5 @@
 
 import React from 'react';
-// Fix: Use Usuario instead of non-existent User export
 import { Usuario } from '../types';
 
 interface SidebarProps {
@@ -9,7 +8,6 @@ interface SidebarProps {
   onLogout: () => void;
   user: Usuario;
   darkMode: boolean;
-  // Fix: Renamed toggleDarkMode to toggleTheme to match App.tsx prop
   toggleTheme: () => void;
 }
 
@@ -25,7 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout
   }
 
   return (
-    <aside className="w-20 md:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col no-print transition-all duration-300">
+    <aside className="w-20 md:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col no-print transition-all duration-300 z-40">
       <div className="p-4 md:p-6 flex items-center justify-center md:justify-start gap-3">
         <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
           G
@@ -52,20 +50,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout
 
       <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-4">
         <div className="flex items-center justify-between md:px-4">
-           <span className="hidden md:block text-[10px] uppercase font-bold text-slate-400">{darkMode ? 'Modo Escuro' : 'Modo Claro'}</span>
+           <span className="hidden md:block text-[10px] uppercase font-bold text-slate-400">
+             {darkMode ? 'Modo Escuro' : 'Modo Claro'}
+           </span>
            <button 
              onClick={toggleTheme}
-             className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform shadow-sm"
-             title="Alternar Tema"
+             className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:scale-110 active:scale-95 transition-all shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
+             title={darkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
            >
-             <i className={`fa-solid ${darkMode ? 'fa-moon' : 'fa-sun'}`}></i>
+             <i className={`fa-solid ${darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'}`}></i>
            </button>
         </div>
 
         <div className="md:px-4 pb-4">
           <div className="hidden md:flex flex-col mb-4 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
-            <span className="text-xs font-bold truncate">{user.username}</span>
-            <span className="text-[9px] text-slate-500 uppercase font-black tracking-widest">{user.role}</span>
+            <span className="text-xs font-bold truncate dark:text-slate-200">{user.username}</span>
+            <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-widest">{user.role}</span>
           </div>
           <button
             onClick={onLogout}
